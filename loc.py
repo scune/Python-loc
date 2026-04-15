@@ -2,7 +2,7 @@ import sys
 import os
 
 if sys.argv[1] == "--help":
-    print("First cmdline argument can be a directory (relative to cd)"
+    print("First cmdline argument can be a directory"
           "and the other arguments can be file endings including the dot.")
     exit()
 
@@ -25,9 +25,12 @@ if directory != '.':
 loc = 0
 for root, dirs, files in os.walk(directory):
     for file in files:
+        fullpath = os.path.join(root, file)
+        dirname =  os.path.join(fullpath, file)
+        if dirname.find("/CMakeFiles/") != -1:
+            continue
         for arg in sys.argv[1:]:
             if file.endswith(arg):
-                fullpath = os.path.join(root, file)
                 loc += GetLoc(fullpath)
 
 print("Total lines of code:", loc)
