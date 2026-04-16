@@ -1,11 +1,14 @@
 import sys
 import os
 
-if sys.argv[1] == "--help":
+def Usage():
     print("First cmdline argument can be a directory path,\n"
           "the other arguments can be file endings including the '.'\n"
           "or folder names that should be ignored using '-i' as a prefix.")
     exit()
+
+if sys.argv[1] == "--help":
+    Usage()
 
 directory = '.' # Default directoy for os.listdir()
 if sys.argv[1][0] != "." or sys.argv[1][0:3] == "../":
@@ -35,6 +38,7 @@ for i in range(argbegin, len(sys.argv)):
         fileEndings.append(sys.argv[i])
 
 loc = 0
+parsedFileCount = 0
 for root, dirs, files in os.walk(directory):
     for file in files:
         fullpath = os.path.join(root, file)
@@ -51,5 +55,10 @@ for root, dirs, files in os.walk(directory):
         for fileEnding in fileEndings:
             if file.endswith(fileEnding):
                 loc += GetLoc(fullpath)
+                parsedFileCount += 1
 
-print("Total lines of code:", loc)
+if parsedFileCount == 0:
+    print("No files found! Usage:")
+    Usage()
+elif parsedFileCount > 1:
+    print("Total lines of code:", loc)
