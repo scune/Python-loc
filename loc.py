@@ -1,10 +1,12 @@
 import sys
 import os
 
-def Usage():
-    print("First cmdline argument can be a directory path,\n"
-          "the other arguments can be file endings including the '.'\n"
-          "or folder names that should be ignored using '-i' as a prefix.")
+if sys.argv[1] == "--help":
+    print("The current directory path for the search can only be specified by the first command.\n"
+          "Other arguments can be file endings while including the '.' and\n"
+          "folder names that should be ignored using \"-i\" as a prefix command\n"
+          "Preconfigured groups can be specified using the \"-g\" prefix command\n"
+          "Current groups are \"c/c++\" and \"glsl\".")
     exit()
 
 if sys.argv[1] == "--help":
@@ -27,13 +29,30 @@ argbegin = 1
 if directory != '.':
     argbegin = 0
 
+def GetGroupFileEndings(groupName):
+    if groupName == "c/c++":
+        return [".cpp", ".hpp", ".c", ".h"]
+    elif groupName == "glsl":
+        return [".glsl",
+                ".vert", ".frag",
+                ".comp",
+                ".rgen", ".rchit", ".rmiss", ".rcall", ".rahit"
+                ".mesh", ".task"]
+    else:
+        print("No group with name", "\"" + groupName + "\"!");
+        return []
+
 ignoreFolders = []
 fileEndings = []
 for i in range(argbegin, len(sys.argv)):
     if i > 0 and sys.argv[i - 1] == "-i":
-        if sys.argv[i][-1] != "/":
+        if sys.argv[i][-1] != '/':
             sys.argv[i] += '/'
+        if sys.argv[i][0] != '/':
+            sys.argv[i] = '/' + sys.argv[i];
         ignoreFolders.append(sys.argv[i])
+    elif i > 0 and sys.argv[i - 1] == "-g":
+        fileEndings.extend(GetGroupFileEndings(sys.argv[i]))
     else:
         fileEndings.append(sys.argv[i])
 
