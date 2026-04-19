@@ -1,7 +1,7 @@
 import sys
 import os
 
-if sys.argv[1] == "--help":
+def Usage():
     print("The current directory path for the search can only be specified by the first command.\n"
           "Other arguments can be file endings while including the '.' and\n"
           "folder names that should be ignored using \"-i\" as a prefix command\n"
