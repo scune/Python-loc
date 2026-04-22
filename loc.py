@@ -15,14 +15,15 @@ if sys.argv[1] == "--help":
 directory = '.' # Default directoy for os.listdir()
 if sys.argv[1][0] != "." or sys.argv[1][0:3] == "../":
     directory = sys.argv[1]
-    print("Search root directory:", directory)
     if directory[-1] != '/':
         directory += '/'
+    print("Search root directory:", directory[0:-1])
 
-def GetLoc(fileName):
-    with open(fileName, "r") as file:
+def GetLoc(filePath):
+    with open(filePath, "r") as file:
         lines = sum(1 for line in file)
-        print(fileName, "has", lines, "lines of code")
+        filePath = filePath.removeprefix(directory)
+        print(filePath, "has", lines, "lines of code")
         return lines
 
 argbegin = 1
