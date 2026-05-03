@@ -2,7 +2,8 @@ import sys
 import os
 
 def Usage():
-    print("The current directory path for the search can only be specified by the first command.\n"
+    print("Usage:\n"
+          "The current directory path for the search can only be specified by the first command.\n"
           "Other arguments can be file endings while including the '.' and\n"
           "folder names that should be ignored using \"-i\" as a prefix command\n"
           "Preconfigured groups can be specified using the \"-g\" prefix command\n"
@@ -17,7 +18,13 @@ if sys.argv[1][0] != "." or sys.argv[1][0:3] == "../":
     directory = sys.argv[1]
     if directory[-1] != '/':
         directory += '/'
+
+    if directory != '.' and (not os.path.isdir(directory) or (os.listdir(directory)) == 0):
+        print(directory, "doesn't exist or is empty!")
+        exit()
+
     print("Search root directory:", directory[0:-1])
+
 
 def GetLoc(filePath):
     with open(filePath, "r") as file:
@@ -45,6 +52,7 @@ def GetGroupFileEndings(groupName):
 
 ignoreFolders = []
 fileEndings = []
+ignoreFilePrefixes = ["."]
 for i in range(argbegin, len(sys.argv)):
     if i > 0 and sys.argv[i - 1] == "-i":
         if sys.argv[i][-1] != '/':
@@ -62,23 +70,24 @@ parsedFileCount = 0
 for root, dirs, files in os.walk(directory):
     for file in files:
         fullpath = os.path.join(root, file)
-        dirname =  os.path.join(fullpath, file)
 
-        ignore = False
-        for ignoreFolderName in ignoreFolders:
-            if dirname.find(ignoreFolderName) != -1:
-                ignore = True
-                break;
-        if ignore:
+        if not file.endswith(tuple(fileEndings)):
             continue
 
-        for fileEnding in fileEndings:
-            if file.endswith(fileEnding):
-                loc += GetLoc(fullpath)
-                parsedFileCount += 1
+        bIgnore = False
+        for ignoreFolder in ignoreFolders:
+            if fullpath.find(ignoreFolder) != -1:
+                bIgnore = True
+                break
+
+        if bIgnore or file.startswith(tuple(ignoreFilePrefixes)):
+            continue
+        
+        loc += GetLoc(fullpath)
+        parsedFileCount += 1
 
 if parsedFileCount == 0:
-    print("No files found! Usage:")
+    print("No files found!")
     Usage()
 elif parsedFileCount > 1:
     print("Total lines of code:", loc)
