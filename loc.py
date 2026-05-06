@@ -25,12 +25,16 @@ if sys.argv[1][0] != "." or sys.argv[1][0:3] == "../":
 
     print("Search root directory:", directory[0:-1])
 
+def PrintFileName(filePath, lines):
+    filePath.co # TODO
+    print("\t" * )
+    print(filePath, "has", lines, "lines of code")
 
 def GetLoc(filePath):
     with open(filePath, "r") as file:
         lines = sum(1 for line in file)
         filePath = filePath.removeprefix(directory)
-        print(filePath, "has", lines, "lines of code")
+        PrintFileName(filePath, lines)
         return lines
 
 argbegin = 1
@@ -69,7 +73,7 @@ loc = 0
 parsedFileCount = 0
 for root, dirs, files in os.walk(directory):
     for file in files:
-        fullpath = os.path.join(root, file)
+        fullpath = directory + os.path.join(root, file)
 
         if not file.endswith(tuple(fileEndings)):
             continue
