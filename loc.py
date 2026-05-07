@@ -13,7 +13,7 @@ def Usage():
 if sys.argv[1] == "--help":
     Usage()
 
-directory = '.' # Default directoy for os.listdir()
+directory = '.' # Default directory for os.listdir()
 if sys.argv[1][0] != "." or sys.argv[1][0:3] == "../":
     directory = sys.argv[1]
     if directory[-1] != '/':
@@ -22,8 +22,6 @@ if sys.argv[1][0] != "." or sys.argv[1][0:3] == "../":
     if directory != '.' and (not os.path.isdir(directory) or (os.listdir(directory)) == 0):
         print(directory, "doesn't exist or is empty!")
         exit()
-
-    #print("Search root directory:", directory[0:-1])
 
 def GetLoc(filePath, filePrintData):
     with open(filePath, "r") as file:
