@@ -23,18 +23,14 @@ if sys.argv[1][0] != "." or sys.argv[1][0:3] == "../":
         print(directory, "doesn't exist or is empty!")
         exit()
 
-    print("Search root directory:", directory[0:-1])
+    #print("Search root directory:", directory[0:-1])
 
-def PrintFileName(filePath, lines):
-    filePath.co # TODO
-    print("\t" * )
-    print(filePath, "has", lines, "lines of code")
-
-def GetLoc(filePath):
+def GetLoc(filePath, filePrintData):
     with open(filePath, "r") as file:
         lines = sum(1 for line in file)
-        filePath = filePath.removeprefix(directory)
-        PrintFileName(filePath, lines)
+        off = filePath.find("/") + 1
+        depth = filePath.count("/", off) + 1
+        filePrintData.append([filePath[off:], lines, depth])
         return lines
 
 argbegin = 1
@@ -69,11 +65,12 @@ for i in range(argbegin, len(sys.argv)):
     else:
         fileEndings.append(sys.argv[i])
 
+filePrintData = []
 loc = 0
 parsedFileCount = 0
 for root, dirs, files in os.walk(directory):
     for file in files:
-        fullpath = directory + os.path.join(root, file)
+        fullpath = os.path.join(root, file)
 
         if not file.endswith(tuple(fileEndings)):
             continue
@@ -87,8 +84,35 @@ for root, dirs, files in os.walk(directory):
         if bIgnore or file.startswith(tuple(ignoreFilePrefixes)):
             continue
         
-        loc += GetLoc(fullpath)
+        loc += GetLoc(fullpath, filePrintData)
         parsedFileCount += 1
+
+# Print file names with associated lines
+# TODO: Folder line when depth decreases
+prevDepth = 1
+for i, (filePath, lines, depth) in enumerate(filePrintData):
+    fileNameOff = filePath.rfind("/") + 1
+
+    t_right = "\u251c"
+    t_down = "\u252c"
+    bottomLeft = "\u2514"
+    solidLine = "\u2500"
+
+    pipeChar = bottomLeft
+    pipeChar2 = solidLine
+    if i + 1 < len(filePrintData):
+        nextFilePath, nextLines, nextDepth = filePrintData[i + 1]
+        if nextDepth >= depth:
+            pipeChar = t_right
+            pipeChar2 = t_down
+
+    if prevDepth != depth: # Print new folder
+        folderNameOff = filePath.rfind("/", 0, fileNameOff - 2) + 1
+        print(" " * (4 * (depth - 1) - 2) + bottomLeft + solidLine + filePath[folderNameOff:fileNameOff])
+        print(" " * 4 * (depth - 1) + bottomLeft + solidLine + pipeChar2 + solidLine + filePath[fileNameOff:], "has", lines, "lines of code")
+        prevDepth = depth
+    else:
+        print(" " * (4 * depth - 2) + pipeChar + solidLine + filePath[fileNameOff:], "has", lines, "lines of code")
 
 if parsedFileCount == 0:
     print("No files found!")
