@@ -23,11 +23,11 @@ if sys.argv[1][0] != "." or sys.argv[1][0:3] == "../":
         print(directory, "doesn't exist or is empty!")
         exit()
 
-def GetLoc(filePath, filePrintData):
+def GetLoc(filePath, filePrintData, depthOff):
     with open(filePath, "r") as file:
         lines = sum(1 for line in file)
         off = filePath.find("/") + 1
-        depth = filePath.count("/", off) + 1
+        depth = filePath.count("/", off) + 1 - depthOff
         filePrintData.append([filePath[off:], lines, depth])
         return lines
 
@@ -66,6 +66,7 @@ for i in range(argbegin, len(sys.argv)):
 filePrintData = []
 loc = 0
 parsedFileCount = 0
+depthOff = max(0, directory.count("/") - 2)
 for root, dirs, files in os.walk(directory):
     for file in files:
         fullpath = os.path.join(root, file)
@@ -82,35 +83,74 @@ for root, dirs, files in os.walk(directory):
         if bIgnore or file.startswith(tuple(ignoreFilePrefixes)):
             continue
         
-        loc += GetLoc(fullpath, filePrintData)
+        loc += GetLoc(fullpath, filePrintData, depthOff)
         parsedFileCount += 1
+
+T_RIGHT = "\u251c"     # ├
+T_DOWN = "\u252c"      # ┬
+BOTTOM_LEFT = "\u2514" # └
+SOLID_LINE = "\u2500"  # ─
 
 # Print file names with associated lines
 # TODO: Folder line when depth decreases
 prevDepth = 1
-for i, (filePath, lines, depth) in enumerate(filePrintData):
-    fileNameOff = filePath.rfind("/") + 1
+lineCache = set()
+for i in range(len(filePrintData)):
+    filePath, lines, depth = filePrintData[i]
 
-    t_right = "\u251c"
-    t_down = "\u252c"
-    bottomLeft = "\u2514"
-    solidLine = "\u2500"
-
-    pipeChar = bottomLeft
-    pipeChar2 = solidLine
+    pipeChar = BOTTOM_LEFT
+    pipeChar2 = SOLID_LINE
+    nextDepth = 0
     if i + 1 < len(filePrintData):
         nextFilePath, nextLines, nextDepth = filePrintData[i + 1]
         if nextDepth >= depth:
-            pipeChar = t_right
-            pipeChar2 = t_down
+            pipeChar = T_RIGHT
+            pipeChar2 = T_DOWN
+        
+        if nextDepth > depth:
+            higher_depth = False
+            for j in range(i+2, len(filePrintData)):
+                j_depth = filePrintData[j][2]
+                if j_depth < nextDepth:
+                    break
+                if j_depth == nextDepth and higher_depth:
+                    lineCache.add(depth)
+                    break
+                if j_depth > nextDepth:
+                    higher_depth = True
 
+    line0 = str()
+    line1 = str()
+
+    fileNameOff = filePath.rfind("/") + 1
     if prevDepth != depth: # Print new folder
         folderNameOff = filePath.rfind("/", 0, fileNameOff - 2) + 1
-        print(" " * (4 * (depth - 1) - 2) + bottomLeft + solidLine + filePath[folderNameOff:fileNameOff])
-        print(" " * 4 * (depth - 1) + bottomLeft + solidLine + pipeChar2 + solidLine + filePath[fileNameOff:], "has", lines, "lines of code")
+
+        line0 = " " * (4 * (depth - 1) - 2) + BOTTOM_LEFT + SOLID_LINE + filePath[folderNameOff:fileNameOff]
+
+        line1 = " " * 4 * (depth - 1) + BOTTOM_LEFT + SOLID_LINE + pipeChar2 + SOLID_LINE + filePath[fileNameOff:] + " has " + str(lines) +  " lines of code"
+
         prevDepth = depth
     else:
-        print(" " * (4 * depth - 2) + pipeChar + solidLine + filePath[fileNameOff:], "has", lines, "lines of code")
+        line0 = " " * (4 * depth - 2) + pipeChar + SOLID_LINE + filePath[fileNameOff:] + " has " + str(lines) +  " lines of code"
+
+    for d in lineCache:
+        d_idx = 4 * d - 2
+
+        if line0[d_idx] == " ":
+            line0 = line0[:d_idx] + "\u2502" + line0[d_idx + 1:]
+        elif line0[d_idx] == BOTTOM_LEFT:
+            line0 = line0[:d_idx] + T_RIGHT + line0[d_idx + 1:]
+
+        if len(line1) > d_idx and line1[d_idx] == " ":
+            line1 = line1[:d_idx] + "\u2502" + line1[d_idx + 1:]
+
+    print(line0)
+    if len(line1) > 0:
+        print(line1)
+    
+    if nextDepth < depth and (nextDepth-1) in lineCache:
+        lineCache.remove(nextDepth-1)
 
 if parsedFileCount == 0:
     print("No files found!")
