@@ -7,10 +7,10 @@ def Usage():
           "Other arguments can be file endings while including the '.' and\n"
           "folder names that should be ignored using \"-i\" as a prefix command\n"
           "Preconfigured groups can be specified using the \"-g\" prefix command\n"
-          "Current groups are \"c/c++\" and \"glsl\".")
+          "Current groups are \"c/c++\", \"zig\" and \"glsl\".")
     exit()
 
-if sys.argv[1] == "--help":
+if sys.argv[1] == "--help" or sys.argv[1] == "--h":
     Usage()
 
 directory = '.' # Default directory for os.listdir()
@@ -38,6 +38,8 @@ if directory != '.':
 def GetGroupFileEndings(groupName):
     if groupName == "c/c++":
         return [".cpp", ".hpp", ".c", ".h"]
+    elif groupName == "zig":
+        return [".zig"]
     elif groupName == "glsl":
         return [".glsl",
                 ".vert", ".frag",
